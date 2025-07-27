@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二分算法猜数游戏演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-setup {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #555;
+            min-width: 80px;
+        }
+
+        .input-group input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-right: 15px;
+            width: 100px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .range-visualization {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .range-bar {
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .range-active {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 20px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .target-indicator {
+            position: absolute;
+            top: -5px;
+            width: 50px;
+            height: 50px;
+            background: #ff4757;
+            border-radius: 50%;
+            z-index: 10;
+            transition: left 0.3s ease;
+            transform: translateX(-50%);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+        }
+
+        .target-indicator::after {
+            content: '目标';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .guess-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .guess-input input {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 18px;
+            margin-right: 15px;
+            width: 150px;
+            text-align: center;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .history {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .history h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .guess-number {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .feedback {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .feedback.too-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .feedback.too-low {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .feedback.correct {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .binary-hint {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .binary-hint h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .binary-hint p {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .recommended-guess {
+            background: #2196f3;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .game-over {
+            background: #4caf50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-over h2 {
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .feedback-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: toastSlideIn 0.3s ease-out;
+        }
+
+        .feedback-toast.success {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        .feedback-toast.too-high {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        .feedback-toast.too-low {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .input-group label {
+                margin-bottom: 10px;
+            }
+            
+            .guess-input {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .guess-input input {
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            
+            .feedback-toast {
+                padding: 15px 20px;
+                font-size: 16px;
+                max-width: 80%;
+                text-align: center;
+                word-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">二分算法猜数游戏</h1>
+        
+        <!-- 游戏设置 -->
+        <div class="game-setup" id="gameSetup">
+            <h3>游戏设置</h3>
+            <div class="input-group">
+                <label for="minRange">最小值:</label>
+                <input type="number" id="minRange" value="1" min="1">
+                <label for="maxRange">最大值:</label>
+                <input type="number" id="maxRange" value="100" min="2">
+                <button class="btn" onclick="startGame()">开始游戏</button>
+            </div>
+            <p style="color: #666; margin-top: 15px;">
+                💡 提示：二分算法会将搜索范围每次减半，是最优的猜数策略！
+            </p>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="game-area" id="gameArea">
+            <!-- 游戏信息 -->
+            <div class="game-info">
+                <div class="info-card">
+                    <h3>猜测次数</h3>
+                    <div class="value" id="guessCount">0</div>
+                </div>
+                <div class="info-card">
+                    <h3>当前范围</h3>
+                    <div class="value" id="currentRange">1 - 100</div>
+                </div>
+                <div class="info-card">
+                    <h3>理论最少次数</h3>
+                    <div class="value" id="minGuesses">7</div>
+                </div>
+            </div>
+
+            <!-- 范围可视化 -->
+            <div class="range-visualization">
+                <h3>可能的数值范围</h3>
+                <div class="range-bar">
+                    <div class="range-active" id="rangeActive"></div>
+                    <div class="target-indicator" id="targetIndicator"></div>
+                </div>
+                <div class="range-labels">
+                    <span id="rangeMin">1</span>
+                    <span id="rangeMax">100</span>
+                </div>
+            </div>
+
+            <!-- 二分算法提示 -->
+            <div class="binary-hint">
+                <h4>🧠 二分算法提示</h4>
+                <p>当前最优猜测: <span class="recommended-guess" id="recommendedGuess">50</span></p>
+                <p>选择范围中点可以最大化信息获取，无论结果如何都能排除一半可能性！</p>
+            </div>
+
+            <!-- 猜数输入 -->
+            <div class="guess-input">
+                <input type="number" id="guessInput" placeholder="输入你的猜测" min="1" max="100">
+                <button class="btn" onclick="makeGuess()">猜测</button>
+                <button class="btn" onclick="useBinaryGuess()" style="margin-left: 10px; background: #2196f3;">使用二分猜测</button>
+            </div>
+
+            <!-- 游戏结束 -->
+            <div class="game-over" id="gameOver" style="display: none;">
+                <h2>🎉 恭喜你猜对了！</h2>
+                <p>目标数字是: <span id="targetNumber"></span></p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div>你的次数</div>
+                        <div id="finalGuessCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>理论最少</div>
+                        <div id="finalMinGuesses">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>效率</div>
+                        <div id="efficiency">100%</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="resetGame()" style="margin-top: 15px;">重新开始</button>
+            </div>
+
+            <!-- 历史记录 -->
+            <div class="history">
+                <h3>猜测历史</h3>
+                <div id="historyList">
+                    <p style="color: #666; text-align: center;">还没有猜测记录</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            target: 0,
+            min: 1,
+            max: 100,
+            originalMin: 1,
+            originalMax: 100,
+            guesses: 0,
+            history: [],
+            gameStarted: false,
+            gameEnded: false
+        };
+
+        function startGame() {
+            const minInput = document.getElementById('minRange');
+            const maxInput = document.getElementById('maxRange');
+            
+            const min = parseInt(minInput.value);
+            const max = parseInt(maxInput.value);
+            
+            if (min >= max) {
+                alert('最大值必须大于最小值！');
+                return;
+            }
+            
+            gameState = {
+                target: Math.floor(Math.random() * (max - min + 1)) + min,
+                min: min,
+                max: max,
+                originalMin: min,
+                originalMax: max,
+                guesses: 0,
+                history: [],
+                gameStarted: true,
+                gameEnded: false
+            };
+            
+            document.getElementById('gameSetup').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('guessInput').max = max;
+            document.getElementById('guessInput').min = min;
+            
+            updateUI();
+            updateRangeVisualization();
+            updateBinaryHint();
+            
+            // 确保游戏开始时隐藏目标指示器
+            document.getElementById('targetIndicator').style.display = 'none';
+            
+            console.log('Target number:', gameState.target); // 调试用
+        }
+
+        function makeGuess() {
+            if (gameState.gameEnded) return;
+            
+            const guessInput = document.getElementById('guessInput');
+            const guess = parseInt(guessInput.value);
+            
+            if (isNaN(guess) || guess < gameState.min || guess > gameState.max) {
+                alert(`请输入 ${gameState.min} 到 ${gameState.max} 之间的数字！`);
+                return;
+            }
+            
+            gameState.guesses++;
+            let feedback = '';
+            let toastClass = '';
+            
+            if (guess === gameState.target) {
+                feedback = '🎉 恭喜！猜对了！';
+                toastClass = 'success';
+                gameState.gameEnded = true;
+                showFeedbackToast(feedback, toastClass);
+                setTimeout(() => {
+                    showGameOver();
+                }, 1500);
+            } else if (guess < gameState.target) {
+                feedback = '📈 太小了，试试更大的数字！';
+                toastClass = 'too-low';
+                gameState.min = guess + 1;
+                showFeedbackToast(feedback, toastClass);
+            } else {
+                feedback = '📉 太大了，试试更小的数字！';
+                toastClass = 'too-high';
+                gameState.max = guess - 1;
+                showFeedbackToast(feedback, toastClass);
+            }
+            
+            // 简化的反馈用于历史记录
+            let historyFeedback = '';
+            if (guess === gameState.target) {
+                historyFeedback = '正确！';
+            } else if (guess < gameState.target) {
+                historyFeedback = '太小了';
+            } else {
+                historyFeedback = '太大了';
+            }
+            
+            gameState.history.push({ guess, feedback: historyFeedback });
+            guessInput.value = '';
+            
+            updateUI();
+            updateRangeVisualization();
+            updateHistory();
+            
+            if (!gameState.gameEnded) {
+                updateBinaryHint();
+            }
+        }
+
+        function showFeedbackToast(message, type) {
+            // 移除现有的toast
+            const existingToast = document.querySelector('.feedback-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新的toast
+            const toast = document.createElement('div');
+            toast.className = `feedback-toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // 2秒后自动移除
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 2000);
+        }
+
+        function useBinaryGuess() {
+            if (gameState.gameEnded) return;
+            
+            const binaryGuess = Math.floor((gameState.min + gameState.max) / 2);
+            document.getElementById('guessInput').value = binaryGuess;
+            makeGuess();
+        }
+
+        function updateUI() {
+            document.getElementById('guessCount').textContent = gameState.guesses;
+            document.getElementById('currentRange').textContent = `${gameState.min} - ${gameState.max}`;
+            
+            const range = gameState.originalMax - gameState.originalMin + 1;
+            const minGuesses = Math.ceil(Math.log2(range));
+            document.getElementById('minGuesses').textContent = minGuesses;
+        }
+
+        function updateRangeVisualization() {
+            const totalRange = gameState.originalMax - gameState.originalMin + 1;
+            const currentRange = gameState.max - gameState.min + 1;
+            const leftOffset = (gameState.min - gameState.originalMin) / totalRange * 100;
+            const width = currentRange / totalRange * 100;
+            
+            const rangeActive = document.getElementById('rangeActive');
+            rangeActive.style.left = leftOffset + '%';
+            rangeActive.style.width = width + '%';
+            
+            document.getElementById('rangeMin').textContent = gameState.min;
+            document.getElementById('rangeMax').textContent = gameState.max;
+            
+            // 更新目标指示器位置
+            const targetOffset = (gameState.target - gameState.originalMin) / totalRange * 100;
+            const targetIndicator = document.getElementById('targetIndicator');
+            targetIndicator.style.left = targetOffset + '%';
+            
+            // 游戏结束时显示目标位置，游戏进行中隐藏
+            if (gameState.gameEnded) {
+                targetIndicator.style.display = 'block';
+            } else {
+                targetIndicator.style.display = 'none';
+            }
+        }
+
+        function updateHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            if (gameState.history.length === 0) {
+                historyList.innerHTML = '<p style="color: #666; text-align: center;">还没有猜测记录</p>';
+                return;
+            }
+            
+            historyList.innerHTML = '';
+            gameState.history.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                let feedbackClass = '';
+                if (item.feedback === '太大了') feedbackClass = 'too-high';
+                else if (item.feedback === '太小了') feedbackClass = 'too-low';
+                else if (item.feedback === '正确！') feedbackClass = 'correct';
+                
+                historyItem.innerHTML = `
+                    <span>第 ${index + 1} 次: <span class="guess-number">${item.guess}</span></span>
+                    <span class="feedback ${feedbackClass}">${item.feedback}</span>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        function updateBinaryHint() {
+            const binaryGuess = Math.floor((gameState.min + gameState.max) / 2);
+            document.getElementById('recommendedGuess').textContent = binaryGuess;
+        }
+
+        function showGameOver() {
+            // 移除可能存在的toast
+            const existingToast = document.querySelector('.feedback-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('targetNumber').textContent = gameState.target;
+            document.getElementById('finalGuessCount').textContent = gameState.guesses;
+            
+            const range = gameState.originalMax - gameState.originalMin + 1;
+            const minGuesses = Math.ceil(Math.log2(range));
+            document.getElementById('finalMinGuesses').textContent = minGuesses;
+            
+            const efficiency = Math.round((minGuesses / gameState.guesses) * 100);
+            document.getElementById('efficiency').textContent = efficiency + '%';
+        }
+
+        function resetGame() {
+            document.getElementById('gameSetup').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('targetIndicator').style.display = 'none';
+            
+            // 移除可能存在的toast
+            const existingToast = document.querySelector('.feedback-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            gameState = {
+                target: 0,
+                min: 1,
+                max: 100,
+                originalMin: 1,
+                originalMax: 100,
+                guesses: 0,
+                history: [],
+                gameStarted: false,
+                gameEnded: false
+            };
+            
+            // 重置二分算法提示
+            document.getElementById('recommendedGuess').textContent = '50';
+        }
+
+        // 回车键支持
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('guessInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    makeGuess();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
