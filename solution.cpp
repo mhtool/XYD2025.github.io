@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <climits>
 using namespace std;
 
 int main() {
@@ -21,45 +20,33 @@ int main() {
         }
     }
     
-    // Find the furthest position we need to reach
-    int max_pos = x[n-1] + 1;
+    long long moves = 0;
+    int current_pos = 0;
     
-    // dp[pos] = minimum moves to reach position pos
-    vector<long long> dp(max_pos + 3, LLONG_MAX);
-    dp[0] = 0;
-    
-    // Mark obstacle positions
-    vector<bool> is_obstacle(max_pos + 3, false);
     for (int i = 0; i < n; i++) {
-        is_obstacle[x[i]] = true;
-    }
-    
-    for (int pos = 0; pos <= max_pos; pos++) {
-        if (dp[pos] == LLONG_MAX) continue;
+        int obstacle_pos = x[i];
+        int target_pos = obstacle_pos - 1; // Position we need to reach to jump over obstacle
         
-        // Don't stay on obstacle
-        if (is_obstacle[pos]) continue;
-        
-        // Walk 1 step
-        if (pos + 1 <= max_pos + 2 && !is_obstacle[pos + 1]) {
-            dp[pos + 1] = min(dp[pos + 1], dp[pos] + 1);
-        }
-        
-        // Jump 2 steps
-        if (pos + 2 <= max_pos + 2) {
-            dp[pos + 2] = min(dp[pos + 2], dp[pos] + 1);
-        }
-    }
-    
-    // Check if we can reach position after each obstacle
-    for (int i = 0; i < n; i++) {
-        if (dp[x[i] + 1] == LLONG_MAX) {
+        if (target_pos < current_pos) {
+            // Can't reach this position
             cout << -1 << endl;
             return 0;
         }
+        
+        // Calculate minimum moves to reach target_pos from current_pos
+        int distance = target_pos - current_pos;
+        
+        // Optimal way: use as many jumps (2 steps) as possible, then walks (1 step)
+        long long jumps = distance / 2;
+        long long walks = distance % 2;
+        
+        moves += jumps + walks; // Total moves to reach target_pos
+        moves += 1; // Jump over the obstacle
+        
+        // Update current position after jumping over obstacle
+        current_pos = obstacle_pos + 1;
     }
     
-    // The answer is the minimum moves to reach the position after the last obstacle
-    cout << dp[x[n-1] + 1] << endl;
+    cout << moves << endl;
     return 0;
 }
