@@ -1,52 +1,42 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 using namespace std;
 
 int main() {
     int n;
     cin >> n;
     
-    vector<int> x(n);
+    vector<int> a(n);
     for (int i = 0; i < n; i++) {
-        cin >> x[i];
+        cin >> a[i];
     }
     
-    // Check if consecutive obstacles exist
+    // Check consecutive obstacles
     for (int i = 0; i < n - 1; i++) {
-        if (x[i+1] - x[i] == 1) {
+        if (a[i+1] - a[i] == 1) {
             cout << -1 << endl;
             return 0;
         }
     }
     
-    long long moves = 0;
-    int current_pos = 0;
+    long long ans = 0;
+    int pos = 0;
     
     for (int i = 0; i < n; i++) {
-        int obstacle_pos = x[i];
-        int target_pos = obstacle_pos - 1; // Position we need to reach to jump over obstacle
+        int need = a[i] - 1; // Position before obstacle
         
-        if (target_pos < current_pos) {
-            // Can't reach this position
+        if (need < pos) {
             cout << -1 << endl;
             return 0;
         }
         
-        // Calculate minimum moves to reach target_pos from current_pos
-        int distance = target_pos - current_pos;
+        int dist = need - pos;
+        ans += (dist + 1) / 2; // Minimum moves to reach need
+        ans += 1; // Jump over obstacle
         
-        // Optimal way: use as many jumps (2 steps) as possible, then walks (1 step)
-        long long jumps = distance / 2;
-        long long walks = distance % 2;
-        
-        moves += jumps + walks; // Total moves to reach target_pos
-        moves += 1; // Jump over the obstacle
-        
-        // Update current position after jumping over obstacle
-        current_pos = obstacle_pos + 1;
+        pos = a[i] + 1; // Position after jumping
     }
     
-    cout << moves << endl;
+    cout << ans << endl;
     return 0;
 }
